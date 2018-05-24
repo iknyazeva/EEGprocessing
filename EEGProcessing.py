@@ -100,7 +100,7 @@ class EEGAnalyser:
         sig = np.delete(sig, 19, 1)
         listTrials = np.unique(L)
         self.good_trials = listTrials
-        self.num_trials = len(listTrials)
+
 
 
         #calculating minimal trial length
@@ -110,9 +110,18 @@ class EEGAnalyser:
                 trial_lengths[i] = np.where(L == listTrials[i])[0].shape[0]
             self.min_length = int(np.amin(trial_lengths))
 
+
+
         #Merge all data in one big series with equal trial length
+        #check last trial
+        lenLastTrial = np.where(L == listTrials[-1:])[0].shape[0]
+        if (lenLastTrial<self.min_length):
+            listTrials = listTrials[:-1]
+        self.num_trials = len(listTrials)
+
         for k in np.arange(0, listTrials.shape[0]):
             start = np.where(L == listTrials[k])[0][0]
+
             if (k==0):
                 alldata = sig[start:(start+self.min_length), :]
             else:
@@ -145,7 +154,7 @@ class EEGAnalyser:
         return ERP
 
 
-    def wavelet_transform(self, elList = None):
+    def wavelet_transform(self, elList = None, print_ = True):
 
         """
         Function for wavelet transform computing
@@ -189,7 +198,8 @@ class EEGAnalyser:
             self.initializeWavelets()
 
         for el in elList:
-            print("Compute channel: ",el+1)
+            if print_:
+                print("Compute channel: ",el+1)
             dataX = fft(data[:, el],nConv)
             for fi in range(0, self.num_freq):
                 wavelet = np.exp(2*1j*np.pi*freq[fi]*wavtime)* np.exp(-np.power(wavtime,2)/(2*np.power(s[fi],2)))
